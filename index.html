@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08172e">
+  <title>RutaRentable PRO | Jornadas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo">↗</div>
+        <div>
+          <strong>Ruta<span>Rentable</span></strong>
+          <small>PRO · Control de jornadas</small>
+        </div>
+      </div>
+
+      <div class="profile">
+        <div class="avatar" id="avatar">JB</div>
+        <div>
+          <strong id="profileName">Javier Bonilla</strong>
+          <small>Conductor</small>
+        </div>
+      </div>
+
+      <nav>
+        <button class="nav-button active" data-view="dashboard"><span>▦</span> Panel principal</button>
+        <button class="nav-button" data-view="sessions"><span>◷</span> Jornadas</button>
+        <button class="nav-button" data-view="vehicles"><span>🚘</span> Vehículos</button>
+        <button class="nav-button" data-view="reports"><span>▤</span> Reportes</button>
+        <button class="nav-button" data-view="settings"><span>⚙</span> Configuración</button>
+      </nav>
+
+      <div class="mode-card">
+        <span class="status-dot"></span>
+        <div>
+          <strong>Registro manual activo</strong>
+          <small>Uber, InDrive y viajes fuera de aplicaciones.</small>
+        </div>
+      </div>
+</aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton">☰</button>
+        <div class="heading">
+          <h1 id="pageTitle">Panel principal</h1>
+          <p id="pageSubtitle">Mide la rentabilidad real de cada jornada.</p>
+        </div>
+        <div class="header-actions">
+          <label>
+            Periodo
+            <select id="periodFilter">
+              <option value="week" selected>Esta semana</option>
+              <option value="month">Este mes</option>
+              <option value="year">Este año</option>
+              <option value="all">Todo</option>
+            </select>
+          </label>
+          <button class="button primary" id="mainActionButton">▶ Iniciar jornada</button>
+        </div>
+      </header>
+
+      <section class="view active" id="dashboard">
+        <article class="active-session panel" id="activeSessionPanel"></article>
+
+        <div class="kpi-grid">
+          <article class="kpi green">
+            <span>Ganancia neta</span>
+            <strong id="kpiNet">$0.00</strong>
+            <small>Ingresos menos todos los gastos</small>
+          </article>
+          <article class="kpi blue">
+            <span>Total cobrado</span>
+            <strong id="kpiIncome">$0.00</strong>
+            <small>Uber + InDrive bruto + particulares</small>
+          </article>
+          <article class="kpi red">
+            <span>Total de gastos</span>
+            <strong id="kpiExpenses">$0.00</strong>
+            <small>Incluye comisión de InDrive</small>
+          </article>
+          <article class="kpi orange">
+            <span>Comisión InDrive</span>
+            <strong id="kpiIndriveCommission">$0.00</strong>
+            <small>Descuento calculado automáticamente</small>
+          </article>
+          <article class="kpi pink">
+            <span>Pendiente por recargar</span>
+            <strong id="kpiRechargePending">$0.00</strong>
+            <small>Comisión menos recargas realizadas</small>
+          </article>
+          <article class="kpi teal">
+            <span>Corredores reembolsados</span>
+            <strong id="kpiReimbursedTolls">$0.00</strong>
+            <small>Registrados, pero no descontados</small>
+          </article>
+          <article class="kpi red">
+            <span>Gasolina</span>
+            <strong id="kpiFuel">$0.00</strong>
+            <small>Inversión total en combustible</small>
+          </article>
+          <article class="kpi yellow">
+            <span>Kilómetros</span>
+            <strong id="kpiKm">0 km</strong>
+            <small>Recorridos trabajando</small>
+          </article>
+          <article class="kpi purple">
+            <span>Horas trabajadas</span>
+            <strong id="kpiHours">0.0 h</strong>
+            <small>Duración de jornadas cerradas</small>
+          </article>
+          <article class="kpi cyan">
+            <span>Ganancia por km</span>
+            <strong id="kpiPerKm">$0.00</strong>
+            <small id="kpiPerHour">Por hora: $0.00</small>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel profitability-card" id="profitabilityCard"></article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Ingresos por origen</h2>
+                <p>Distribución del periodo seleccionado</p>
+              </div>
+            </div>
+            <div id="sourceSummary" class="summary-list"></div>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Ganancia neta por jornada</h2>
+                <p>Últimas jornadas cerradas</p>
+              </div>
+            </div>
+            <div class="bar-chart" id="sessionChart"></div>
+          </article>
+
+          <article class="panel recent-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Jornadas recientes</h2>
+                <p>Resumen de tus últimos días de trabajo</p>
+              </div>
+              <button class="text-button" data-go="sessions">Ver todas</button>
+            </div>
+            <div class="recent-list" id="recentSessions"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="sessions">
+        <div class="section-heading">
+          <div>
+            <h2>Jornadas de trabajo</h2>
+            <p>Inicia con kilometraje y gasolina. Finaliza con ganancias y kilometraje final.</p>
+          </div>
+          <button class="button primary" id="sessionsActionButton">▶ Iniciar jornada</button>
+        </div>
+
+        <article class="panel table-panel">
+          <div class="table-toolbar">
+            <input id="sessionSearch" type="search" placeholder="Buscar por vehículo o nota">
+            <select id="sessionStatusFilter">
+              <option value="all">Todas</option>
+              <option value="active">Activa</option>
+              <option value="closed">Finalizadas</option>
+            </select>
+            <button class="button secondary" id="exportCsv">Exportar CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th>Vehículo</th>
+                  <th>Km inicio</th>
+                  <th>Km final</th>
+                  <th>Recorrido</th>
+                  <th>Ingresos</th>
+                  <th>Comisión InDrive</th>
+                  <th>Corredores reembolsados</th>
+                  <th>Gastos descontados</th>
+                  <th>Pendiente recarga</th>
+                  <th>Neto</th>
+                  <th>Resultado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="sessionsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="view" id="vehicles">
+        <div class="section-heading">
+          <div>
+            <h2>Vehículos</h2>
+            <p>El kilometraje se actualiza automáticamente al finalizar una jornada.</p>
+          </div>
+          <button class="button primary" id="addVehicleButton">+ Agregar vehículo</button>
+        </div>
+        <div class="vehicle-grid" id="vehicleGrid"></div>
+      </section>
+
+      <section class="view" id="reports">
+        <div class="section-heading">
+          <div>
+            <h2>Reportes de rentabilidad</h2>
+            <p>Compara ingresos, kilómetros, horas y rendimiento.</p>
+          </div>
+          <div class="button-row">
+            <button class="button secondary" id="printReport">Imprimir / PDF</button>
+            <button class="button primary" id="exportReport">Exportar resumen</button>
+          </div>
+        </div>
+
+        <article class="panel report-sheet">
+          <div class="report-header">
+            <div>
+              <h2>RutaRentable PRO</h2>
+              <p id="reportPeriod">Resumen</p>
+            </div>
+            <span>REPORTE</span>
+          </div>
+
+          <div class="report-kpis" id="reportKpis"></div>
+
+          <h3>Rendimiento por plataforma</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Origen</th>
+                  <th>Viajes</th>
+                  <th>Ingresos</th>
+                  <th>% del total</th>
+                </tr>
+              </thead>
+              <tbody id="reportSources"></tbody>
+            </table>
+          </div>
+
+          <h3>Detalle de jornadas</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Vehículo</th>
+                  <th>Horas</th>
+                  <th>Km</th>
+                  <th>Ingresos</th>
+                  <th>Comisión InDrive</th>
+                  <th>Corredores reembolsados</th>
+                  <th>Gastos descontados</th>
+                  <th>Pendiente recarga</th>
+                  <th>Neto</th>
+                  <th>$/hora</th>
+                  <th>$/km</th>
+                </tr>
+              </thead>
+              <tbody id="reportSessions"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="view" id="settings">
+        <div class="section-heading">
+          <div>
+            <h2>Configuración</h2>
+            <p>Ajusta los valores usados para evaluar si el trabajo es rentable.</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <article class="panel form-panel">
+            <h3>Perfil y evaluación</h3>
+            <label>
+              Nombre
+              <input id="nameInput" type="text">
+            </label>
+            <label>
+              Ganancia mínima deseada por hora
+              <input id="minimumHourlyInput" type="number" min="0" step="0.01">
+            </label>
+            <label>
+              Ganancia mínima deseada por kilómetro
+              <input id="minimumKmInput" type="number" min="0" step="0.01">
+            </label>
+            <label>
+              Comisión de InDrive (%)
+              <input id="indriveRateInput" type="number" min="0" max="100" step="0.01">
+            </label>
+            <button class="button primary" id="saveSettings">Guardar configuración</button>
+          </article>
+
+          <article class="panel">
+            <h3>Respaldo de datos</h3>
+            <p class="muted">Esta demostración guarda la información en el navegador.</p>
+            <div class="stack-buttons">
+              <button class="button secondary" id="backupJson">Descargar respaldo JSON</button>
+              <label class="button secondary file-button">
+                Importar respaldo
+                <input id="restoreJson" type="file" accept=".json,application/json">
+              </label>
+            </div>
+          </article>
+
+          <article class="panel explanation-card">
+            <h3>Cómo se evalúa una jornada</h3>
+            <p>La aplicación compara la ganancia neta por hora y por kilómetro con los mínimos que configures.</p>
+            <ul>
+              <li><strong>Muy rentable:</strong> supera ambos mínimos ampliamente.</li>
+              <li><strong>Rentable:</strong> alcanza los mínimos establecidos.</li>
+              <li><strong>Rentabilidad baja:</strong> deja ganancia, pero no alcanza tus objetivos.</li>
+              <li><strong>Pérdida:</strong> los gastos superan los ingresos.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="startModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2>Iniciar jornada</h2>
+          <p>Registra las condiciones iniciales antes de comenzar a trabajar.</p>
+        </div>
+        <button class="icon-button" data-close="startModal">✕</button>
+      </div>
+
+      <form id="startForm">
+        <div class="form-grid">
+          <label>
+            Vehículo
+            <select id="startVehicle" required></select>
+          </label>
+          <label>
+            Fecha
+            <input id="startDate" type="date" required>
+          </label>
+          <label>
+            Hora de inicio
+            <input id="startTime" type="time" required>
+          </label>
+          <label>
+            Kilometraje inicial
+            <input id="startKm" type="number" min="0" step="1" required>
+          </label>
+          <label>
+            Inversión inicial en gasolina
+            <input id="startFuel" type="number" min="0" step="0.01" required>
+          </label>
+          <label>
+            Meta de ganancia del día (opcional)
+            <input id="dayGoal" type="number" min="0" step="0.01">
+          </label>
+          <label class="full">
+            Nota inicial
+            <input id="startNote" type="text" maxlength="120" placeholder="Ejemplo: turno de la mañana">
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="button secondary" data-close="startModal">Cancelar</button>
+          <button type="submit" class="button primary">Comenzar jornada</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="finishModal">
+    <div class="modal large">
+      <div class="modal-header">
+        <div>
+          <h2>Finalizar jornada</h2>
+          <p>Completa las ganancias y el kilometraje final del vehículo.</p>
+        </div>
+        <button class="icon-button" data-close="finishModal">✕</button>
+      </div>
+
+      <form id="finishForm">
+        <div class="finish-summary" id="finishStartSummary"></div>
+
+        <div class="form-grid">
+          <label>
+            Fecha de finalización
+            <input id="finishDate" type="date" required>
+          </label>
+          <label>
+            Hora de finalización
+            <input id="finishTime" type="time" required>
+          </label>
+          <label class="important-field">
+            Kilometraje final
+            <input id="finishKm" type="number" min="0" step="1" required>
+            <small>Debe ser igual o mayor que el kilometraje inicial.</small>
+          </label>
+          <label>
+            Gasolina adicional
+            <input id="finishExtraFuel" type="number" min="0" step="0.01" value="0">
+          </label>
+        </div>
+
+        <div class="earnings-grid">
+          <article class="earning-box uber">
+            <h3>Uber</h3>
+            <label>
+              Ganancia recibida
+              <input id="uberEarnings" type="number" min="0" step="0.01" value="0">
+            </label>
+            <label>
+              Cantidad de viajes
+              <input id="uberTrips" type="number" min="0" step="1" value="0">
+            </label>
+          </article>
+
+          <article class="earning-box indrive">
+            <h3>InDrive</h3>
+            <label>
+              Total cobrado a los pasajeros
+              <input id="indriveGross" type="number" min="0" step="0.01" value="0">
+            </label>
+            <label>
+              Cantidad de viajes
+              <input id="indriveTrips" type="number" min="0" step="1" value="0">
+            </label>
+            <label>
+              Recarga de saldo realizada
+              <input id="indriveRecharge" type="number" min="0" step="0.01" value="0">
+              <small>No se descuenta dos veces; se usa para saber cuánto queda pendiente.</small>
+            </label>
+            <div class="indrive-calculation">
+              <div><span>Comisión <b id="indriveRateLabel">13.69%</b></span><strong id="liveIndriveCommission">$0.00</strong></div>
+              <div><span>Ingreso después de comisión</span><strong id="liveIndriveNet">$0.00</strong></div>
+              <div><span>Pendiente por recargar</span><strong id="liveRechargePending">$0.00</strong></div>
+            </div>
+          </article>
+
+          <article class="earning-box outside">
+            <h3>Fuera de aplicaciones</h3>
+            <label>
+              Total cobrado
+              <input id="outsideEarnings" type="number" min="0" step="0.01" value="0">
+            </label>
+            <label>
+              Cantidad de viajes
+              <input id="outsideTrips" type="number" min="0" step="1" value="0">
+            </label>
+          </article>
+        </div>
+
+        <div class="expense-section">
+          <h3>Gastos de la jornada y de las aplicaciones</h3>
+          <p>La comisión de InDrive se agrega automáticamente al total de gastos. Los corredores reembolsados se registran aparte y no reducen la ganancia.</p>
+          <div class="form-grid">
+            <label class="reimbursed-field">
+              Corredores y peajes reembolsados
+              <input id="finishTolls" type="number" min="0" step="0.01" value="0">
+              <small>Se registra para control, pero no se descuenta de la ganancia.</small>
+            </label>
+            <label>
+              Otros gastos de aplicaciones
+              <input id="finishAppExpenses" type="number" min="0" step="0.01" value="0">
+            </label>
+            <label>
+              Otros gastos generales
+              <input id="finishOtherExpenses" type="number" min="0" step="0.01" value="0">
+            </label>
+            <label class="full">
+              Nota final
+              <input id="finishNote" type="text" maxlength="140" placeholder="Observaciones de la jornada">
+            </label>
+          </div>
+        </div>
+
+        <div class="live-result expanded">
+          <div><span>Km recorridos</span><strong id="liveKm">0 km</strong></div>
+          <div><span>Total cobrado</span><strong id="liveIncome">$0.00</strong></div>
+          <div><span>Comisión InDrive</span><strong id="livePlatformExpense">$0.00</strong></div>
+          <div class="reimbursed-summary"><span>Corredores reembolsados</span><strong id="liveReimbursedTolls">$0.00</strong></div>
+          <div><span>Total gastos</span><strong id="liveExpenses">$0.00</strong></div>
+          <div><span>Pendiente recarga</span><strong id="livePendingRechargeTotal">$0.00</strong></div>
+          <div class="highlight"><span>Ganancia neta</span><strong id="liveNet">$0.00</strong></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="button secondary" data-close="finishModal">Cancelar</button>
+          <button type="submit" class="button primary">Finalizar y calcular rendimiento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="vehicleModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2>Agregar vehículo</h2>
+          <p>Registra el auto que usarás para trabajar.</p>
+        </div>
+        <button class="icon-button" data-close="vehicleModal">✕</button>
+      </div>
+      <form id="vehicleForm">
+        <div class="form-grid">
+          <label>
+            Nombre
+            <input id="vehicleName" type="text" required placeholder="Corolla Cross">
+          </label>
+          <label>
+            Placa
+            <input id="vehiclePlate" type="text" placeholder="AB1234">
+          </label>
+          <label>
+            Marca
+            <input id="vehicleBrand" type="text" placeholder="Toyota">
+          </label>
+          <label>
+            Modelo / año
+            <input id="vehicleModel" type="text" placeholder="Corolla Cross 2022">
+          </label>
+          <label class="full">
+            Kilometraje actual
+            <input id="vehicleKm" type="number" min="0" step="1" required>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="button secondary" data-close="vehicleModal">Cancelar</button>
+          <button type="submit" class="button primary">Guardar vehículo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
